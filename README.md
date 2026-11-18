@@ -100,8 +100,9 @@ python seed.py
 
 ### 3.5 Run the Application
 ```bash
-uvicorn app.main:app --reload
+python -m uvicorn app.main:app --reload
 ```
+*(Note: On Windows systems with Application Control/AppLocker policies, invoke via `python -m uvicorn` rather than `uvicorn.exe` directly).*
 Open your browser at:
 - **Swagger UI**: [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs)
 - **ReDoc**: [http://127.0.0.1:8000/redoc](http://127.0.0.1:8000/redoc)
