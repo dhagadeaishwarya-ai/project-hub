@@ -1,9 +1,16 @@
+import logging
 from contextlib import asynccontextmanager
-from fastapi import FastAPI
+from fastapi import FastAPI, Request, status
+from fastapi.responses import JSONResponse
+from fastapi.exceptions import RequestValidationError
+from starlette.exceptions import HTTPException as StarletteHTTPException
 from app.database import engine, Base, SessionLocal
 from app.models import User, UserRole
 from app.security import hash_password
 from app.config import settings
+from app.routers import auth
+
+logger = logging.getLogger("projecthub")
 
 
 @asynccontextmanager
@@ -38,6 +45,23 @@ app = FastAPI(
 )
 
 
-@app.get("/health")
+# Global exception handler to prevent leaking stack traces or SQL errors
+@app.exception_handler(Exception)
+async def unhandled_exception_handler(request: Request, exc: Exception):
+    if isinstance(exc, (StarletteHTTPException, RequestValidationError)):
+        raise exc
+    logger.error("Unhandled server exception: %s", exc, exc_info=True)
+    return JSONResponse(
+        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        content={"detail": "An internal server error occurred."}
+    )
+
+
+# Health check
+@app.get("/health", tags=["Health"])
 def health_check():
     return {"status": "ok"}
+
+
+# Routers
+app.include_router(auth.router)

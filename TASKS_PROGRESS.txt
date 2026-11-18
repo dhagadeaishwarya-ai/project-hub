@@ -1,0 +1,260 @@
+================================================================================
+PROJECT HUB: IMPLEMENTATION TASKS PROGRESS & CHECKLIST
+================================================================================
+
+[CURRENT STATUS SUMMARY]
+Day 1:
+- Stage 0: Project Setup               [COMPLETED]
+- Stage 1: Models, Schemas, Security   [COMPLETED]
+- Stage 2: Auth, Dependencies, Users   [COMPLETED]
+- Stage 3: Teams & Guide Assignment    [IN PROGRESS]
+Day 2:
+- Stage 4: Proposals & Review Workflow [TODO]
+- Stage 5: Progress & Faculty Feedback [TODO]
+- Stage 6: Dashboard Statistics        [TODO]
+Day 3:
+- Stage 7: Security Audit & Coverage   [TODO]
+- Stage 8: Seed Script, README, Demo   [TODO]
+
+================================================================================
+FILE-BY-FILE BREAKDOWN: COMPLETED & TODO TASKS
+================================================================================
+
+--------------------------------------------------------------------------------
+1. requirements.txt
+--------------------------------------------------------------------------------
+[COMPLETED]
+- Pinned and compatible dependencies added: fastapi, uvicorn[standard], python-multipart, sqlalchemy, psycopg2-binary, pydantic[email], pydantic-settings, python-jose[cryptography], passlib[bcrypt], bcrypt<4.1, pytest, pytest-cov, httpx.
+- Verified dependencies installed and working.
+[TODO]
+- None (Maintain as dependencies evolve).
+
+--------------------------------------------------------------------------------
+2. .gitignore & .env.example & .env
+--------------------------------------------------------------------------------
+[COMPLETED]
+- .gitignore configured to ignore venv, __pycache__, .env, *.db, coverage files.
+- .env.example created with all environment variables and placeholders.
+- .env created for local development and test environment.
+[TODO]
+- None.
+
+--------------------------------------------------------------------------------
+3. app/config.py
+--------------------------------------------------------------------------------
+[COMPLETED]
+- Settings model using pydantic-settings.
+- Reads DATABASE_URL, SECRET_KEY, ALGORITHM, ACCESS_TOKEN_EXPIRE_MINUTES, ADMIN_EMAIL, ADMIN_PASSWORD, ENVIRONMENT.
+- Validator ensuring SECRET_KEY security outside testing environment.
+[TODO]
+- None.
+
+--------------------------------------------------------------------------------
+4. app/database.py
+--------------------------------------------------------------------------------
+[COMPLETED]
+- SQLAlchemy engine, SessionLocal, Base (declarative_base), get_db generator.
+- SQLite connect_args support for local development and tests.
+[TODO]
+- None.
+
+--------------------------------------------------------------------------------
+5. app/models.py
+--------------------------------------------------------------------------------
+[COMPLETED]
+- UserRole enum ('admin', 'faculty', 'student').
+- ProposalStatus enum ('SUBMITTED', 'CHANGES_REQUESTED', 'APPROVED').
+- team_members association table with UNIQUE constraint on user_id (one team per student).
+- User model (id, name, email unique, hashed_password, role, is_active).
+- Team model (id, name, academic_year, leader_id, guide_id nullable).
+- Proposal model (id, team_id unique, title, abstract, problem_statement, domain, tech_stack, status, faculty_comment).
+- ProgressUpdate model (id, team_id, week_number, description, completion_percent, deliverable_url, created_at) with uq_team_week constraint.
+- Feedback model (id, progress_update_id, faculty_id, comments, marks, created_at).
+- Bidirectional relationships between models.
+[TODO]
+- None.
+
+--------------------------------------------------------------------------------
+6. app/schemas.py
+--------------------------------------------------------------------------------
+[COMPLETED]
+- User schemas: UserBase, UserCreate (min 8 chars password), UserRead (excludes password).
+- Auth schemas: Token, TokenData.
+- Team schemas: TeamCreate (name 3-50 chars), TeamMemberAdd, TeamGuideAssign, TeamRead.
+- Proposal schemas: ProposalCreate, ProposalUpdate (title 5-150 chars, abstract min 50 chars), ProposalReview, ProposalRead.
+- Progress & Feedback schemas: ProgressUpdateCreate (week 1-20, percent 0-100, deliverable_url validation), ProgressUpdateRead, FeedbackCreate (marks 0-100), FeedbackRead.
+- Dashboard schemas: AdminDashboard, FacultyDashboard, StudentDashboard.
+[TODO]
+- None.
+
+--------------------------------------------------------------------------------
+7. app/security.py
+--------------------------------------------------------------------------------
+[COMPLETED]
+- hash_password(password) using passlib bcrypt.
+- verify_password(plain, hashed).
+- create_access_token(subject, role, expires_minutes) creating signed JWT.
+- decode_token(token) raising JWTError on invalid or expired token.
+[TODO]
+- None.
+
+--------------------------------------------------------------------------------
+8. app/deps.py
+--------------------------------------------------------------------------------
+[COMPLETED]
+- get_current_user dependency via OAuth2PasswordBearer on /auth/login.
+- Validation of token, user existence, and is_active check (401 on inactive).
+- require_role(*roles) dependency raising 403 on unauthorized role.
+[TODO]
+- None.
+
+--------------------------------------------------------------------------------
+9. app/main.py
+--------------------------------------------------------------------------------
+[COMPLETED]
+- FastAPI instance titled ProjectHub.
+- Lifespan context manager creating tables and seeding admin user.
+- Global exception handler protecting against stack trace and internal leaks (500).
+- GET /health route.
+- Registered auth router.
+[TODO]
+- Register teams, proposals, progress, and dashboard routers as they are built.
+
+--------------------------------------------------------------------------------
+10. app/notifications.py
+--------------------------------------------------------------------------------
+[COMPLETED]
+- Not started yet.
+[TODO]
+- Stage 4: Implement in-memory SENT list and notify(to_email, subject, message) mock function.
+
+--------------------------------------------------------------------------------
+11. app/routers/auth.py
+--------------------------------------------------------------------------------
+[COMPLETED]
+- POST /auth/login (OAuth2 form: username=email, password) -> returns token.
+- POST /users (Admin only) -> creates user, 409 on duplicate email, returns UserRead.
+- GET /users/me -> returns current user.
+[TODO]
+- None.
+
+--------------------------------------------------------------------------------
+12. app/routers/teams.py
+--------------------------------------------------------------------------------
+[COMPLETED]
+- Not started yet.
+[TODO]
+- Stage 3:
+  * POST /teams (Student only): create team, student becomes leader & 1st member.
+  * GET /teams: role-scoped visibility (admin sees all, faculty sees guided, student sees own).
+  * GET /teams/{id}: role and ownership checks.
+  * POST /teams/{id}/members: add member, check 1-team rule & size <= 4.
+  * DELETE /teams/{id}/members/{user_id}: remove member, protect leader.
+  * PUT /teams/{id}/guide: admin assigns faculty guide.
+
+--------------------------------------------------------------------------------
+13. app/routers/proposals.py
+--------------------------------------------------------------------------------
+[COMPLETED]
+- Not started yet.
+[TODO]
+- Stage 4:
+  * POST /teams/{id}/proposal: leader submits proposal, checks team size 2-4, status SUBMITTED.
+  * PUT /teams/{id}/proposal: leader edits if SUBMITTED or CHANGES_REQUESTED -> sets to SUBMITTED.
+  * PATCH /proposals/{id}/review: assigned guide only, approves or requests changes (requires comment).
+  * Allowed status transitions mapped via state dictionary.
+
+--------------------------------------------------------------------------------
+14. app/routers/progress.py
+--------------------------------------------------------------------------------
+[COMPLETED]
+- Not started yet.
+[TODO]
+- Stage 5:
+  * POST /teams/{id}/progress: requires APPROVED proposal, unique week_number, non-decreasing completion_percent.
+  * GET /teams/{id}/progress: team members, guide, admin only; includes feedbacks.
+  * POST /progress/{id}/feedback: assigned guide only, comments and optional marks 0-100.
+
+--------------------------------------------------------------------------------
+15. app/routers/dashboard.py
+--------------------------------------------------------------------------------
+[COMPLETED]
+- Not started yet.
+[TODO]
+- Stage 6:
+  * GET /dashboard: aggregate SQL queries for admin, faculty, and student statistics.
+
+--------------------------------------------------------------------------------
+16. tests/conftest.py
+--------------------------------------------------------------------------------
+[COMPLETED]
+- In-memory SQLite with StaticPool.
+- Per-test table creation/drop.
+- Fixtures: client, make_user, admin_user, admin_token, faculty_user, faculty_token, student_user, student_token, auth_header.
+[TODO]
+- None.
+
+--------------------------------------------------------------------------------
+17. tests/test_security.py
+--------------------------------------------------------------------------------
+[COMPLETED]
+- 3 tests: password hash & verify, wrong password rejection, expired token rejection.
+[TODO]
+- None.
+
+--------------------------------------------------------------------------------
+18. tests/test_auth.py
+--------------------------------------------------------------------------------
+[COMPLETED]
+- 6 tests: login success, wrong password 401, no token 401, student creating user 403, password 7 chars 422, password 8 chars 201.
+[TODO]
+- Run and verify passing.
+
+--------------------------------------------------------------------------------
+19. tests/test_teams.py
+--------------------------------------------------------------------------------
+[COMPLETED]
+- Not started yet.
+[TODO]
+- Stage 3: 7 tests for team creation, membership boundaries, guide assignment, and ownership.
+
+--------------------------------------------------------------------------------
+20. tests/test_proposals.py
+--------------------------------------------------------------------------------
+[COMPLETED]
+- Not started yet.
+[TODO]
+- Stage 4: 7 tests for proposal submission, boundaries, review workflow, and notification check.
+
+--------------------------------------------------------------------------------
+21. tests/test_progress.py
+--------------------------------------------------------------------------------
+[COMPLETED]
+- Not started yet.
+[TODO]
+- Stage 5: 9+ tests for progress updates, non-decreasing percentages, week/marks boundaries, and feedbacks.
+
+--------------------------------------------------------------------------------
+22. tests/test_dashboard.py
+--------------------------------------------------------------------------------
+[COMPLETED]
+- Not started yet.
+[TODO]
+- Stage 6: 2+ tests for dashboard queries and role scoping.
+
+--------------------------------------------------------------------------------
+23. seed.py
+--------------------------------------------------------------------------------
+[COMPLETED]
+- Not started yet.
+[TODO]
+- Stage 8: Idempotent seeding of admin, 2 faculty, 6 students, 2 teams, proposals, progress updates, feedback.
+
+--------------------------------------------------------------------------------
+24. README.md
+--------------------------------------------------------------------------------
+[COMPLETED]
+- Not started yet.
+[TODO]
+- Stage 8: Full architecture map, setup guide, route table, business rules, demo script, future work.
+================================================================================
