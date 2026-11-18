@@ -7,9 +7,9 @@ Day 1:
 - Stage 0: Project Setup               [COMPLETED]
 - Stage 1: Models, Schemas, Security   [COMPLETED]
 - Stage 2: Auth, Dependencies, Users   [COMPLETED]
-- Stage 3: Teams & Guide Assignment    [IN PROGRESS]
+- Stage 3: Teams & Guide Assignment    [COMPLETED]
 Day 2:
-- Stage 4: Proposals & Review Workflow [TODO]
+- Stage 4: Proposals & Review Workflow [IN PROGRESS]
 - Stage 5: Progress & Faculty Feedback [TODO]
 - Stage 6: Dashboard Statistics        [TODO]
 Day 3:
@@ -142,15 +142,15 @@ FILE-BY-FILE BREAKDOWN: COMPLETED & TODO TASKS
 12. app/routers/teams.py
 --------------------------------------------------------------------------------
 [COMPLETED]
-- Not started yet.
+- POST /teams (Student only): create team, student becomes leader & 1st member.
+- GET /teams: role-scoped visibility (admin sees all, faculty sees guided, student sees own).
+- GET /teams/{id}: role and ownership checks.
+- POST /teams/{id}/members: add member, check 1-team rule & size <= 4.
+- DELETE /teams/{id}/members/{user_id}: remove member, protect leader.
+- PUT /teams/{id}/guide: admin assigns faculty guide.
+- Helper functions: is_student_in_any_team, ensure_leader, ensure_can_view_team.
 [TODO]
-- Stage 3:
-  * POST /teams (Student only): create team, student becomes leader & 1st member.
-  * GET /teams: role-scoped visibility (admin sees all, faculty sees guided, student sees own).
-  * GET /teams/{id}: role and ownership checks.
-  * POST /teams/{id}/members: add member, check 1-team rule & size <= 4.
-  * DELETE /teams/{id}/members/{user_id}: remove member, protect leader.
-  * PUT /teams/{id}/guide: admin assigns faculty guide.
+- None.
 
 --------------------------------------------------------------------------------
 13. app/routers/proposals.py
@@ -208,15 +208,15 @@ FILE-BY-FILE BREAKDOWN: COMPLETED & TODO TASKS
 [COMPLETED]
 - 6 tests: login success, wrong password 401, no token 401, student creating user 403, password 7 chars 422, password 8 chars 201.
 [TODO]
-- Run and verify passing.
+- None.
 
 --------------------------------------------------------------------------------
 19. tests/test_teams.py
 --------------------------------------------------------------------------------
 [COMPLETED]
-- Not started yet.
+- 7 tests passing: create team, duplicate team 400, team size boundaries (up to 4 OK, 5th 400), non-leader 403, admin assigns guide, student cannot assign guide 403, cross-team view 403.
 [TODO]
-- Stage 3: 7 tests for team creation, membership boundaries, guide assignment, and ownership.
+- None.
 
 --------------------------------------------------------------------------------
 20. tests/test_proposals.py
