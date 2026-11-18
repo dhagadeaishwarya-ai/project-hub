@@ -9,8 +9,8 @@ Day 1:
 - Stage 2: Auth, Dependencies, Users   [COMPLETED]
 - Stage 3: Teams & Guide Assignment    [COMPLETED]
 Day 2:
-- Stage 4: Proposals & Review Workflow [IN PROGRESS]
-- Stage 5: Progress & Faculty Feedback [TODO]
+- Stage 4: Proposals & Review Workflow [COMPLETED]
+- Stage 5: Progress & Faculty Feedback [IN PROGRESS]
 - Stage 6: Dashboard Statistics        [TODO]
 Day 3:
 - Stage 7: Security Audit & Coverage   [TODO]
@@ -124,9 +124,10 @@ FILE-BY-FILE BREAKDOWN: COMPLETED & TODO TASKS
 10. app/notifications.py
 --------------------------------------------------------------------------------
 [COMPLETED]
-- Not started yet.
+- In-memory SENT list and notify(to_email, subject, message) mock function.
+- clear_sent() helper for test isolation.
 [TODO]
-- Stage 4: Implement in-memory SENT list and notify(to_email, subject, message) mock function.
+- None.
 
 --------------------------------------------------------------------------------
 11. app/routers/auth.py
@@ -156,13 +157,14 @@ FILE-BY-FILE BREAKDOWN: COMPLETED & TODO TASKS
 13. app/routers/proposals.py
 --------------------------------------------------------------------------------
 [COMPLETED]
-- Not started yet.
+- POST /teams/{id}/proposal: leader submits proposal, checks team size 2-4, status starts SUBMITTED.
+- GET /teams/{id}/proposal: role-based view for team members, guide, admin.
+- PUT /teams/{id}/proposal: leader edits if SUBMITTED or CHANGES_REQUESTED -> resets to SUBMITTED.
+- PATCH /proposals/{id}/review: assigned guide only, approves or requests changes with required comment.
+- Centralized ALLOWED_TRANSITIONS state machine dictionary.
+- Notifications sent on proposal submission and review decisions.
 [TODO]
-- Stage 4:
-  * POST /teams/{id}/proposal: leader submits proposal, checks team size 2-4, status SUBMITTED.
-  * PUT /teams/{id}/proposal: leader edits if SUBMITTED or CHANGES_REQUESTED -> sets to SUBMITTED.
-  * PATCH /proposals/{id}/review: assigned guide only, approves or requests changes (requires comment).
-  * Allowed status transitions mapped via state dictionary.
+- None.
 
 --------------------------------------------------------------------------------
 14. app/routers/progress.py
@@ -222,9 +224,9 @@ FILE-BY-FILE BREAKDOWN: COMPLETED & TODO TASKS
 20. tests/test_proposals.py
 --------------------------------------------------------------------------------
 [COMPLETED]
-- Not started yet.
+- 7 tests passing: submit success, duplicate proposal 400, title length boundaries (4, 5, 150, 151), abstract 49 chars 422, guide approves and SENT notified, non-guide faculty 403, editing post-approval 400.
 [TODO]
-- Stage 4: 7 tests for proposal submission, boundaries, review workflow, and notification check.
+- None.
 
 --------------------------------------------------------------------------------
 21. tests/test_progress.py
