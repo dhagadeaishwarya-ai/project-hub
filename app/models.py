@@ -1,5 +1,5 @@
 import enum
-from datetime import datetime
+from datetime import datetime, timezone
 from sqlalchemy import (
     Column,
     Integer,
@@ -108,7 +108,7 @@ class ProgressUpdate(Base):
     description = Column(Text, nullable=False)
     completion_percent = Column(Integer, nullable=False)
     deliverable_url = Column(String(500), nullable=True)
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
 
     __table_args__ = (
         UniqueConstraint("team_id", "week_number", name="uq_team_week"),
@@ -127,7 +127,7 @@ class Feedback(Base):
     faculty_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     comments = Column(Text, nullable=False)
     marks = Column(Integer, nullable=True)
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
 
     # Relationships
     progress_update = relationship("ProgressUpdate", back_populates="feedbacks")

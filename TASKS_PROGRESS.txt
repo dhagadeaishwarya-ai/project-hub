@@ -10,8 +10,8 @@ Day 1:
 - Stage 3: Teams & Guide Assignment    [COMPLETED]
 Day 2:
 - Stage 4: Proposals & Review Workflow [COMPLETED]
-- Stage 5: Progress & Faculty Feedback [IN PROGRESS]
-- Stage 6: Dashboard Statistics        [TODO]
+- Stage 5: Progress & Faculty Feedback [COMPLETED]
+- Stage 6: Dashboard Statistics        [IN PROGRESS]
 Day 3:
 - Stage 7: Security Audit & Coverage   [TODO]
 - Stage 8: Seed Script, README, Demo   [TODO]
@@ -170,12 +170,12 @@ FILE-BY-FILE BREAKDOWN: COMPLETED & TODO TASKS
 14. app/routers/progress.py
 --------------------------------------------------------------------------------
 [COMPLETED]
-- Not started yet.
+- POST /teams/{id}/progress: requires APPROVED proposal, unique week_number, non-decreasing completion_percent.
+- GET /teams/{id}/progress: team members, guide, admin only; includes feedbacks.
+- POST /progress/{id}/feedback: assigned guide only, comments and optional marks 0-100.
+- Notification sent to team leader on feedback.
 [TODO]
-- Stage 5:
-  * POST /teams/{id}/progress: requires APPROVED proposal, unique week_number, non-decreasing completion_percent.
-  * GET /teams/{id}/progress: team members, guide, admin only; includes feedbacks.
-  * POST /progress/{id}/feedback: assigned guide only, comments and optional marks 0-100.
+- None.
 
 --------------------------------------------------------------------------------
 15. app/routers/dashboard.py
@@ -232,9 +232,9 @@ FILE-BY-FILE BREAKDOWN: COMPLETED & TODO TASKS
 21. tests/test_progress.py
 --------------------------------------------------------------------------------
 [COMPLETED]
-- Not started yet.
+- 17 parametrized & boundary tests passing: blocked before approval, completion bounds (-1, 0, 100, 101), percentage cannot decrease, week bounds (0, 1, 20, 21), marks bounds (-1, 0, 100, 101), guide adds feedback, student cannot add feedback 403, cross-team view 403.
 [TODO]
-- Stage 5: 9+ tests for progress updates, non-decreasing percentages, week/marks boundaries, and feedbacks.
+- None.
 
 --------------------------------------------------------------------------------
 22. tests/test_dashboard.py

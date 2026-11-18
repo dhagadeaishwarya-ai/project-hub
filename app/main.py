@@ -8,7 +8,7 @@ from app.database import engine, Base, SessionLocal
 from app.models import User, UserRole
 from app.security import hash_password
 from app.config import settings
-from app.routers import auth, teams, proposals
+from app.routers import auth, teams, proposals, progress
 
 logger = logging.getLogger("projecthub")
 
@@ -67,3 +67,4 @@ def health_check():
 app.include_router(auth.router)
 app.include_router(teams.router)
 app.include_router(proposals.router)
+app.include_router(progress.router)
