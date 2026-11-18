@@ -8,7 +8,7 @@ from app.database import engine, Base, SessionLocal
 from app.models import User, UserRole
 from app.security import hash_password
 from app.config import settings
-from app.routers import auth, teams, proposals, progress
+from app.routers import auth, teams, proposals, progress, dashboard
 
 logger = logging.getLogger("projecthub")
 
@@ -68,3 +68,4 @@ app.include_router(auth.router)
 app.include_router(teams.router)
 app.include_router(proposals.router)
 app.include_router(progress.router)
+app.include_router(dashboard.router)

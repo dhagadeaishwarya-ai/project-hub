@@ -11,9 +11,9 @@ Day 1:
 Day 2:
 - Stage 4: Proposals & Review Workflow [COMPLETED]
 - Stage 5: Progress & Faculty Feedback [COMPLETED]
-- Stage 6: Dashboard Statistics        [IN PROGRESS]
+- Stage 6: Dashboard Statistics        [COMPLETED]
 Day 3:
-- Stage 7: Security Audit & Coverage   [TODO]
+- Stage 7: Security Audit & Coverage   [IN PROGRESS]
 - Stage 8: Seed Script, README, Demo   [TODO]
 
 ================================================================================
@@ -181,10 +181,12 @@ FILE-BY-FILE BREAKDOWN: COMPLETED & TODO TASKS
 15. app/routers/dashboard.py
 --------------------------------------------------------------------------------
 [COMPLETED]
-- Not started yet.
+- GET /dashboard: role-specific aggregate metrics using SQLAlchemy func.count and group_by without Python iteration loops.
+  * Admin: total_students, total_faculty, total_teams, unassigned_teams, proposals_by_status.
+  * Faculty: assigned_teams, pending_reviews, teams_without_recent_progress (<14 days).
+  * Student: team_name, guide_name, proposal_status, latest_completion_percent, last_feedback_comment.
 [TODO]
-- Stage 6:
-  * GET /dashboard: aggregate SQL queries for admin, faculty, and student statistics.
+- None.
 
 --------------------------------------------------------------------------------
 16. tests/conftest.py
@@ -240,9 +242,9 @@ FILE-BY-FILE BREAKDOWN: COMPLETED & TODO TASKS
 22. tests/test_dashboard.py
 --------------------------------------------------------------------------------
 [COMPLETED]
-- Not started yet.
+- 3 tests passing: admin aggregate counts, student isolated dashboard data, faculty pending reviews and unupdated teams.
 [TODO]
-- Stage 6: 2+ tests for dashboard queries and role scoping.
+- None.
 
 --------------------------------------------------------------------------------
 23. seed.py
