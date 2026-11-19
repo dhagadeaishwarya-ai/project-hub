@@ -15,6 +15,7 @@ Day 2:
 Day 3:
 - Stage 7: Security Audit & Coverage   [COMPLETED]
 - Stage 8: Seed Script, README, Demo   [COMPLETED]
+- Frontend: Single Page Web Portal     [COMPLETED]
 
 ================================================================================
 FILE-BY-FILE BREAKDOWN: COMPLETED & TODO TASKS
@@ -259,6 +260,18 @@ FILE-BY-FILE BREAKDOWN: COMPLETED & TODO TASKS
 --------------------------------------------------------------------------------
 [COMPLETED]
 - Full architecture map, setup guide, route table, business rules, mock notifications, demo credentials, 10-step demo script for Swagger, and future work list.
+[TODO]
+- None.
+
+--------------------------------------------------------------------------------
+25. app/static/ (Complete Frontend Web Portal)
+--------------------------------------------------------------------------------
+[COMPLETED]
+- app/static/index.html: Responsive single-page application shell, navigation bar, quick demo login buttons, dynamic tab areas, action modals, toast alerts.
+- app/static/css/styles.css: Custom design system with color variables, cards, badges, timeline, progress bars, responsive layout.
+- app/static/js/api.js: Modular API client with JWT handling, error parsing, and endpoint methods for all 15+ backend routes.
+- app/static/js/app.js: State management, role-based views (Admin/Faculty/Student), team management, proposal review workflow, progress tracking, and feedback.
+- app/main.py: Mounted StaticFiles on /static and served SPA at GET /.
 [TODO]
 - None.
 ================================================================================

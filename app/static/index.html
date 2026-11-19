@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ProjectHub - College Project Team Management</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/css/styles.css">
+  <style>
+    .nav-bar {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      border-bottom: 1px solid var(--border-color);
+      background: rgba(21, 30, 50, 0.7);
+      backdrop-filter: blur(8px);
+      padding: 0 1.5rem;
+      position: sticky;
+      top: 0;
+      z-index: 40;
+    }
+    .nav-link {
+      padding: 1rem 1rem;
+      color: var(--text-muted);
+      text-decoration: none;
+      font-weight: 500;
+      font-size: 0.9rem;
+      border-bottom: 2px solid transparent;
+      cursor: pointer;
+      transition: var(--transition);
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+    .nav-link:hover {
+      color: var(--text-main);
+    }
+    .nav-link.active {
+      color: var(--primary);
+      border-bottom-color: var(--primary);
+    }
+    .demo-bar {
+      background: #111a2e;
+      border-bottom: 1px solid var(--border-color);
+      padding: 0.45rem 1.5rem;
+      font-size: 0.8rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+    .demo-btn {
+      background: #1e293b;
+      color: #94a3b8;
+      border: 1px solid #334155;
+      padding: 0.2rem 0.6rem;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      font-size: 0.75rem;
+      font-weight: 500;
+      transition: var(--transition);
+    }
+    .demo-btn:hover {
+      background: #334155;
+      color: #f8fafc;
+    }
+    .app-header {
+      padding: 0.85rem 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: var(--bg-card);
+      border-bottom: 1px solid var(--border-color);
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+    .logo-container {
+      display: flex;
+      align-items: center;
+      gap: 0.65rem;
+      text-decoration: none;
+      color: var(--text-main);
+    }
+    .logo-icon {
+      background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+      color: white;
+      width: 34px;
+      height: 34px;
+      border-radius: var(--radius-md);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 1.1rem;
+      box-shadow: 0 4px 10px rgba(59, 130, 246, 0.4);
+    }
+    .logo-text {
+      font-size: 1.25rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+    .login-container {
+      max-width: 440px;
+      width: 100%;
+      margin: 3rem auto;
+      padding: 2rem;
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-lg);
+    }
+    .demo-card-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.5rem;
+      margin-top: 1rem;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Demo Switcher Top Banner -->
+  <div class="demo-bar">
+    <div style="display:flex; align-items:center; gap:0.5rem; flex-wrap:wrap;">
+      <span style="color:var(--text-dim); font-weight:600;">⚡ Quick 1-Click Demo Login:</span>
+      <button class="demo-btn" onclick="App.quickLogin('admin')">👑 Admin</button>
+      <button class="demo-btn" onclick="App.quickLogin('faculty1')">👨‍🏫 Dr. Sharma (Guide)</button>
+      <button class="demo-btn" onclick="App.quickLogin('faculty2')">👩‍🏫 Dr. Patel (Guide)</button>
+      <button class="demo-btn" onclick="App.quickLogin('student1')">🎓 Student 1 (Leader Team 1)</button>
+      <button class="demo-btn" onclick="App.quickLogin('student4')">🎓 Student 4 (Leader Team 2)</button>
+    </div>
+    <div style="display:flex; align-items:center; gap:0.75rem;">
+      <a href="/docs" target="_blank" style="color:#60a5fa; text-decoration:none;">Swagger Docs</a>
+      <span style="color:var(--text-dim);">|</span>
+      <a href="/redoc" target="_blank" style="color:#94a3b8; text-decoration:none;">ReDoc</a>
+      <span style="color:var(--text-dim);">|</span>
+      <a href="/health" target="_blank" style="color:#34d399; text-decoration:none;">Health Check</a>
+    </div>
+  </div>
+
+  <!-- AUTH VIEW (When user is logged out) -->
+  <div id="auth-view" style="display:none; min-height:80vh; flex-direction:column; align-items:center; justify-content:center; padding:1.5rem;">
+    <div class="login-container">
+      <div style="text-align:center; margin-bottom:1.5rem;">
+        <div class="logo-icon" style="width:48px; height:48px; margin:0 auto 0.75rem auto; font-size:1.4rem;">PH</div>
+        <h2 style="font-size:1.5rem; font-weight:700;">ProjectHub Portal</h2>
+        <p style="color:var(--text-muted); font-size:0.875rem;">Role-based college project team management</p>
+      </div>
+
+      <form id="login-form">
+        <div class="form-group">
+          <label class="form-label">Email Address</label>
+          <input type="email" id="login-email" class="form-control" placeholder="user@projecthub.edu" required value="admin@projecthub.edu">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Password</label>
+          <input type="password" id="login-password" class="form-control" placeholder="••••••••" required value="AdminPass123!">
+        </div>
+        <button type="submit" id="login-submit-btn" class="btn btn-primary" style="width:100%; margin-top:0.5rem;">Sign In</button>
+      </form>
+
+      <div style="margin-top:2rem; border-top:1px solid var(--border-color); padding-top:1.25rem;">
+        <div style="font-size:0.8rem; color:var(--text-muted); text-align:center; margin-bottom:0.75rem; text-transform:uppercase; font-weight:600;">Or Instant Demo Login</div>
+        <div class="demo-card-grid">
+          <button class="demo-btn" style="padding:0.5rem;" onclick="App.quickLogin('admin')">👑 Admin</button>
+          <button class="demo-btn" style="padding:0.5rem;" onclick="App.quickLogin('faculty1')">👨‍🏫 Dr. Sharma</button>
+          <button class="demo-btn" style="padding:0.5rem;" onclick="App.quickLogin('faculty2')">👩‍🏫 Dr. Patel</button>
+          <button class="demo-btn" style="padding:0.5rem;" onclick="App.quickLogin('student1')">🎓 Student 1</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- APPLICATION VIEW (When user is logged in) -->
+  <div id="app-view" style="display:none;">
+    <!-- Main App Header -->
+    <header class="app-header">
+      <div style="display:flex; align-items:center; gap:1.5rem;">
+        <a href="#" class="logo-container" onclick="App.switchTab('dashboard'); return false;">
+          <div class="logo-icon">PH</div>
+          <span class="logo-text">ProjectHub</span>
+        </a>
+      </div>
+
+      <div style="display:flex; align-items:center; gap:1rem;">
+        <div id="user-profile-pill"></div>
+        <button class="btn btn-secondary btn-sm" onclick="App.logout()">🚪 Logout</button>
+      </div>
+    </header>
+
+    <!-- Navigation Bar -->
+    <nav class="nav-bar">
+      <a class="nav-link active" data-tab="dashboard" onclick="App.switchTab('dashboard')">📊 Dashboard</a>
+      <a class="nav-link" data-tab="teams" onclick="App.switchTab('teams')">👥 Project Teams</a>
+      <a class="nav-link" id="nav-admin-users" data-tab="admin-users" style="display:none;" onclick="App.switchTab('admin-users')">⚙️ User Provisioning</a>
+    </nav>
+
+    <!-- Main Content Area -->
+    <main id="tab-content-area" style="padding: 2rem 1.5rem;"></main>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- MODALS                                                                    -->
+  <!-- ========================================================================= -->
+
+  <!-- Modal: Create Team -->
+  <div id="modal-create-team" class="modal-backdrop">
+    <div class="modal-container">
+      <div class="modal-header">
+        <h3 class="modal-title">Create Project Team</h3>
+        <button class="modal-close" onclick="App.closeModal('modal-create-team')">&times;</button>
+      </div>
+      <form onsubmit="App.handleCreateTeam(event)">
+        <div class="modal-body">
+          <div class="form-group">
+            <label class="form-label">Team Name (3-50 chars)</label>
+            <input type="text" id="team-name-input" class="form-control" minlength="3" maxlength="50" required placeholder="e.g. Autonomous Rover AI">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Academic Year</label>
+            <input type="text" id="team-year-input" class="form-control" required placeholder="e.g. 2026-2027" value="2026-2027">
+          </div>
+          <div class="form-help">You will automatically become the student leader and first member of the team.</div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="App.closeModal('modal-create-team')">Cancel</button>
+          <button type="submit" class="btn btn-primary">Create Team</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal: Add Team Member -->
+  <div id="modal-add-member" class="modal-backdrop">
+    <div class="modal-container">
+      <div class="modal-header">
+        <h3 class="modal-title">Add Team Member</h3>
+        <button class="modal-close" onclick="App.closeModal('modal-add-member')">&times;</button>
+      </div>
+      <form onsubmit="App.handleAddMember(event)">
+        <input type="hidden" id="add-member-team-id">
+        <div class="modal-body">
+          <div class="form-group">
+            <label class="form-label">Student Email</label>
+            <input type="email" id="add-member-email" class="form-control" required placeholder="student2@projecthub.edu">
+          </div>
+          <div class="form-help">Target user must be an active student not already belonging to any team. Teams can have up to 4 members.</div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="App.closeModal('modal-add-member')">Cancel</button>
+          <button type="submit" class="btn btn-primary">Add Member</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal: Assign Faculty Guide (Admin) -->
+  <div id="modal-assign-guide" class="modal-backdrop">
+    <div class="modal-container">
+      <div class="modal-header">
+        <h3 class="modal-title">Assign Faculty Guide</h3>
+        <button class="modal-close" onclick="App.closeModal('modal-assign-guide')">&times;</button>
+      </div>
+      <form onsubmit="App.handleAssignGuide(event)">
+        <input type="hidden" id="assign-guide-team-id">
+        <div class="modal-body">
+          <p style="margin-bottom:1rem; color:var(--text-muted);">Assigning guide for team: <strong id="assign-guide-team-name" style="color:var(--text-main);"></strong></p>
+          <div class="form-group">
+            <label class="form-label">Select Faculty Member</label>
+            <select id="assign-guide-faculty-id" class="form-control" required>
+              <option value="2">Dr. Ramesh Sharma (dr.sharma@projecthub.edu)</option>
+              <option value="3">Dr. Priya Patel (dr.patel@projecthub.edu)</option>
+            </select>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="App.closeModal('modal-assign-guide')">Cancel</button>
+          <button type="submit" class="btn btn-primary">Assign Guide</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal: Submit Proposal -->
+  <div id="modal-submit-proposal" class="modal-backdrop">
+    <div class="modal-container" style="max-width:640px;">
+      <div class="modal-header">
+        <h3 class="modal-title">Submit Project Proposal</h3>
+        <button class="modal-close" onclick="App.closeModal('modal-submit-proposal')">&times;</button>
+      </div>
+      <form onsubmit="App.handleSubmitProposal(event)">
+        <input type="hidden" id="proposal-team-id">
+        <div class="modal-body">
+          <div class="form-group">
+            <label class="form-label">Project Title (5-150 characters)</label>
+            <input type="text" id="prop-title" class="form-control" minlength="5" maxlength="150" required placeholder="e.g. Autonomous Terrain Rover with SLAM">
+          </div>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
+            <div class="form-group">
+              <label class="form-label">Domain</label>
+              <input type="text" id="prop-domain" class="form-control" required placeholder="e.g. Robotics & AI">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Tech Stack</label>
+              <input type="text" id="prop-tech-stack" class="form-control" required placeholder="e.g. Python, ROS2, PyTorch">
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Problem Statement</label>
+            <textarea id="prop-problem" class="form-control" rows="2" required placeholder="Explain the specific problem this project addresses..."></textarea>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Abstract (minimum 50 characters)</label>
+            <textarea id="prop-abstract" class="form-control" minlength="50" rows="4" required placeholder="Provide an abstract summarizing the methodology, objectives, and deliverables (at least 50 characters)..."></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="App.closeModal('modal-submit-proposal')">Cancel</button>
+          <button type="submit" class="btn btn-primary">Submit to Guide</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal: Edit Proposal -->
+  <div id="modal-edit-proposal" class="modal-backdrop">
+    <div class="modal-container" style="max-width:640px;">
+      <div class="modal-header">
+        <h3 class="modal-title">Edit Project Proposal</h3>
+        <button class="modal-close" onclick="App.closeModal('modal-edit-proposal')">&times;</button>
+      </div>
+      <form onsubmit="App.handleEditProposal(event)">
+        <input type="hidden" id="edit-prop-team-id">
+        <div class="modal-body">
+          <div class="form-group">
+            <label class="form-label">Project Title (5-150 characters)</label>
+            <input type="text" id="edit-prop-title" class="form-control" minlength="5" maxlength="150" required>
+          </div>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
+            <div class="form-group">
+              <label class="form-label">Domain</label>
+              <input type="text" id="edit-prop-domain" class="form-control" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Tech Stack</label>
+              <input type="text" id="edit-prop-tech-stack" class="form-control" required>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Problem Statement</label>
+            <textarea id="edit-prop-problem" class="form-control" rows="2" required></textarea>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Abstract (minimum 50 characters)</label>
+            <textarea id="edit-prop-abstract" class="form-control" minlength="50" rows="4" required></textarea>
+          </div>
+          <div class="form-help">Saving changes automatically resets the proposal status to SUBMITTED for guide re-review.</div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="App.closeModal('modal-edit-proposal')">Cancel</button>
+          <button type="submit" class="btn btn-warning">Save & Resubmit</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal: Review Proposal (Faculty) -->
+  <div id="modal-review-proposal" class="modal-backdrop">
+    <div class="modal-container">
+      <div class="modal-header">
+        <h3 class="modal-title">Review Project Proposal</h3>
+        <button class="modal-close" onclick="App.closeModal('modal-review-proposal')">&times;</button>
+      </div>
+      <form onsubmit="App.handleReviewProposal(event)">
+        <input type="hidden" id="review-prop-id">
+        <div class="modal-body">
+          <div class="form-group">
+            <label class="form-label">Decision</label>
+            <select id="review-decision" class="form-control" required>
+              <option value="APPROVED">APPROVE Proposal</option>
+              <option value="CHANGES_REQUESTED">REQUEST CHANGES</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Faculty Feedback / Comment</label>
+            <textarea id="review-comment" class="form-control" rows="3" placeholder="Required when requesting changes; optional for approvals..."></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="App.closeModal('modal-review-proposal')">Cancel</button>
+          <button type="submit" class="btn btn-primary">Submit Review</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal: Log Progress (Student) -->
+  <div id="modal-add-progress" class="modal-backdrop">
+    <div class="modal-container">
+      <div class="modal-header">
+        <h3 class="modal-title">Log Weekly Progress</h3>
+        <button class="modal-close" onclick="App.closeModal('modal-add-progress')">&times;</button>
+      </div>
+      <form onsubmit="App.handleAddProgress(event)">
+        <input type="hidden" id="progress-team-id">
+        <div class="modal-body">
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
+            <div class="form-group">
+              <label class="form-label">Week Number (1-20)</label>
+              <input type="number" id="progress-week-num" class="form-control" min="1" max="20" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Completion (0-100%)</label>
+              <input type="number" id="progress-percent" class="form-control" min="0" max="100" required placeholder="e.g. 35">
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Milestone Description</label>
+            <textarea id="progress-desc" class="form-control" rows="3" required placeholder="Describe what tasks and objectives were achieved this week..."></textarea>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Deliverable URL (optional)</label>
+            <input type="url" id="progress-url" class="form-control" placeholder="https://github.com/myteam/project or drive link">
+          </div>
+          <div class="form-help">Completion percentage cannot decrease versus earlier weeks.</div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="App.closeModal('modal-add-progress')">Cancel</button>
+          <button type="submit" class="btn btn-primary">Post Update</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal: Add Faculty Feedback & Grade -->
+  <div id="modal-add-feedback" class="modal-backdrop">
+    <div class="modal-container">
+      <div class="modal-header">
+        <h3 class="modal-title">Provide Faculty Feedback & Grade</h3>
+        <button class="modal-close" onclick="App.closeModal('modal-add-feedback')">&times;</button>
+      </div>
+      <form onsubmit="App.handleAddFeedback(event)">
+        <input type="hidden" id="feedback-progress-id">
+        <div class="modal-body">
+          <p style="margin-bottom:1rem; color:var(--text-muted);">Evaluating: <strong id="feedback-week-label" style="color:var(--text-main);"></strong></p>
+          <div class="form-group">
+            <label class="form-label">Marks (0-100, optional)</label>
+            <input type="number" id="feedback-marks" class="form-control" min="0" max="100" placeholder="e.g. 90">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Comments & Guidance</label>
+            <textarea id="feedback-comments" class="form-control" rows="3" required placeholder="Provide detailed remarks on the weekly milestone..."></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="App.closeModal('modal-add-feedback')">Cancel</button>
+          <button type="submit" class="btn btn-primary">Post Feedback</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal: Create User (Admin) -->
+  <div id="modal-create-user" class="modal-backdrop">
+    <div class="modal-container">
+      <div class="modal-header">
+        <h3 class="modal-title">Provision New User</h3>
+        <button class="modal-close" onclick="App.closeModal('modal-create-user')">&times;</button>
+      </div>
+      <form onsubmit="App.handleCreateUser(event)">
+        <div class="modal-body">
+          <div class="form-group">
+            <label class="form-label">Full Name</label>
+            <input type="text" id="user-name-input" class="form-control" required placeholder="e.g. John Doe">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Email Address</label>
+            <input type="email" id="user-email-input" class="form-control" required placeholder="johndoe@projecthub.edu">
+          </div>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
+            <div class="form-group">
+              <label class="form-label">Role</label>
+              <select id="user-role-input" class="form-control" required>
+                <option value="student">Student</option>
+                <option value="faculty">Faculty</option>
+                <option value="admin">Administrator</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Password (min 8 chars)</label>
+              <input type="password" id="user-pass-input" class="form-control" minlength="8" required placeholder="••••••••">
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="App.closeModal('modal-create-user')">Cancel</button>
+          <button type="submit" class="btn btn-primary">Provision User</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div id="toast-container"></div>
+
+  <!-- Scripts -->
+  <script src="/static/js/api.js"></script>
+  <script src="/static/js/app.js"></script>
+</body>
+</html>
