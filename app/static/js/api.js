@@ -112,20 +112,26 @@ const API = {
   },
 
   // Teams
-  async getTeams() {
-    return this.request('/teams');
+  async getTeams(course = '') {
+    const url = course ? `/teams?course=${encodeURIComponent(course)}` : '/teams';
+    return this.request(url);
+  },
+
+  async getCourses() {
+    return this.request('/teams/meta/courses');
   },
 
   async getTeam(id) {
     return this.request(`/teams/${id}`);
   },
 
-  async createTeam(name, academicYear) {
+  async createTeam(name, academicYear, course) {
     return this.request('/teams', {
       method: 'POST',
       body: JSON.stringify({
         name,
         academic_year: academicYear,
+        course: course || 'CS501 - Capstone Project',
       }),
     });
   },

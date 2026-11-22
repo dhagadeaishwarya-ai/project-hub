@@ -90,22 +90,27 @@ def get_dashboard(
     # 3. Student Dashboard
     # ------------------------------------------------------------------------
     else:
-        team = (
+        student_teams = (
             db.query(Team)
             .join(Team.members)
             .filter(User.id == current_user.id)
-            .first()
+            .all()
         )
 
-        if not team:
+        if not student_teams:
             return {
                 "role": "student",
                 "team_name": None,
+                "course": None,
                 "guide_name": None,
                 "proposal_status": None,
                 "latest_completion_percent": 0,
-                "last_feedback_comment": None
+                "last_feedback_comment": None,
+                "teams_count": 0,
+                "enrolled_courses": []
             }
+
+        team = student_teams[0]
 
         # Latest progress update
         latest_update = (
@@ -127,8 +132,11 @@ def get_dashboard(
         return {
             "role": "student",
             "team_name": team.name,
+            "course": team.course,
             "guide_name": team.guide.name if team.guide else None,
             "proposal_status": team.proposal.status.value if team.proposal else None,
             "latest_completion_percent": latest_update.completion_percent if latest_update else 0,
-            "last_feedback_comment": last_feedback.comments if last_feedback else None
+            "last_feedback_comment": last_feedback.comments if last_feedback else None,
+            "teams_count": len(student_teams),
+            "enrolled_courses": list(dict.fromkeys(t.course for t in student_teams if t.course))
         }

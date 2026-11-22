@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from app.database import get_db
@@ -12,9 +12,14 @@ router = APIRouter(prefix="/teams", tags=["Teams"])
 # ============================================================================
 # Helper Functions
 # ============================================================================
-def is_student_in_any_team(db: Session, user_id: int) -> bool:
-    """Check if the user is already part of any team."""
-    exists = db.query(team_members).filter(team_members.c.user_id == user_id).first()
+def is_student_in_course_team(db: Session, user_id: int, course: str) -> bool:
+    """Check if the user is already part of a team for the given course."""
+    exists = (
+        db.query(Team)
+        .join(Team.members)
+        .filter(User.id == user_id, Team.course == course)
+        .first()
+    )
     return exists is not None
 
 
@@ -58,15 +63,16 @@ def create_team(
     current_user: User = Depends(require_role(UserRole.STUDENT))
 ):
     """Create a new team. Student creator becomes leader and first member."""
-    if is_student_in_any_team(db, current_user.id):
+    if is_student_in_course_team(db, current_user.id, team_in.course):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Student is already a member of a team"
+            detail=f"Student is already a member of a team for course '{team_in.course}'"
         )
 
     team = Team(
         name=team_in.name,
         academic_year=team_in.academic_year,
+        course=team_in.course,
         leader_id=current_user.id
     )
     team.members.append(current_user)
@@ -78,23 +84,34 @@ def create_team(
 
 @router.get("", response_model=List[TeamRead])
 def list_teams(
+    course: Optional[str] = None,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    """List teams scoped by user role: admin sees all, faculty sees guided, student sees own."""
+    """List teams scoped by user role and optional course filter: admin sees all, faculty sees guided, student sees own."""
     user_role = current_user.role.value if isinstance(current_user.role, UserRole) else str(current_user.role)
+    query = db.query(Team)
+
     if user_role == UserRole.ADMIN.value:
-        return db.query(Team).all()
+        pass
     elif user_role == UserRole.FACULTY.value:
-        return db.query(Team).filter(Team.guide_id == current_user.id).all()
+        query = query.filter(Team.guide_id == current_user.id)
     else:
         # Student role
-        return (
-            db.query(Team)
-            .join(Team.members)
-            .filter(User.id == current_user.id)
-            .all()
-        )
+        query = query.join(Team.members).filter(User.id == current_user.id)
+
+    if course:
+        query = query.filter(Team.course == course)
+
+    return query.all()
+
+
+@router.get("/meta/courses", response_model=List[str])
+def get_courses(db: Session = Depends(get_db)):
+    """Retrieve unique list of all course names with existing teams."""
+    rows = db.query(Team.course).distinct().all()
+    courses = [r[0] for r in rows if r[0]]
+    return sorted(courses)
 
 
 @router.get("/{team_id}", response_model=TeamRead)
@@ -143,11 +160,16 @@ def add_team_member(
             detail="Target user must be an active student"
         )
 
-    if is_student_in_any_team(db, target_user.id):
+    if is_student_in_course_team(db, target_user.id, team.course):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Student is already a member of a team"
+            detail=f"Student is already a member of a team for course '{team.course}'"
         )
+
+    team.members.append(target_user)
+    db.commit()
+    db.refresh(team)
+    return team
 
     team.members.append(target_user)
     db.commit()

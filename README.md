@@ -23,11 +23,17 @@ project_hub/
 │   ├── config.py            # Pydantic Settings & environment validation
 │   ├── database.py          # SQLAlchemy engine, declarative Base, session generator
 │   ├── deps.py              # Auth & role-based access control dependencies
-│   ├── main.py              # FastAPI application, lifespan handler, exception guards
+│   ├── main.py              # FastAPI application, lifespan handler, static files mount
 │   ├── models.py            # SQLAlchemy 2.x domain models & association table
 │   ├── notifications.py     # In-memory mock notification dispatcher
 │   ├── schemas.py           # Pydantic v2 schemas and Field validators
 │   ├── security.py          # Bcrypt hashing and JWT token encode/decode
+│   ├── static/              # Complete Frontend Web Portal (HTML5, CSS3, Vanilla JS)
+│   │   ├── index.html       # Single-Page Web Application UI & Modals
+│   │   ├── css/styles.css   # Modern Dark/Light Design System
+│   │   └── js/
+│   │       ├── api.js       # Typed Async API Client with JWT Auth
+│   │       └── app.js       # State Store, Role Routing, Multi-course Filters
 │   └── routers/
 │       ├── __init__.py
 │       ├── auth.py          # Login, user creation, current user profile
@@ -104,6 +110,7 @@ python -m uvicorn app.main:app --reload
 ```
 *(Note: On Windows systems with Application Control/AppLocker policies, invoke via `python -m uvicorn` rather than `uvicorn.exe` directly).*
 Open your browser at:
+- **Web Application Portal**: [http://127.0.0.1:8000/](http://127.0.0.1:8000/)
 - **Swagger UI**: [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs)
 - **ReDoc**: [http://127.0.0.1:8000/redoc](http://127.0.0.1:8000/redoc)
 - **Health Check**: [http://127.0.0.1:8000/health](http://127.0.0.1:8000/health)
@@ -132,12 +139,13 @@ The test suite includes **50+ comprehensive unit, boundary, and security tests**
 | `POST` | `/auth/login` | Public | Authenticates credentials and returns a signed JWT |
 | `POST` | `/users` | `admin` | Create new users with role validation (409 on duplicate) |
 | `GET` | `/users/me` | Any Authenticated | Retrieve current user profile (excludes password) |
-| `POST` | `/teams` | `student` | Creates a new team; creator becomes leader & 1st member |
-| `GET` | `/teams` | Any Authenticated | Scoped visibility (Admin: all, Faculty: guided, Student: own) |
+| `POST` | `/teams` | `student` | Creates a new team with course specification; creator becomes leader & 1st member |
+| `GET` | `/teams` | Any Authenticated | Scoped visibility (Admin: all, Faculty: guided, Student: own); optional `?course=` filter |
+| `GET` | `/teams/meta/courses` | Public | List all unique course names across all registered teams |
 | `GET` | `/teams/{id}` | Any Authenticated | View team details with ownership verification |
-| `POST` | `/teams/{id}/members` | `student` (Leader) | Add student to team (enforces 1-team rule and max 4 members) |
+| `POST` | `/teams/{id}/members` | `student` (Leader) | Add student to team (enforces 1 team per student per course, max 4 members) |
 | `DELETE` | `/teams/{id}/members/{user_id}` | `student` (Leader) | Remove member (leader cannot be removed) |
-| `PUT` | `/teams/{id}/guide` | `admin` | Assign active faculty guide to a team |
+| `PUT` | `/teams/{id}/guide` | `admin` | Assign active faculty guide to a team (guides can lead multiple teams/courses) |
 | `POST` | `/teams/{id}/proposal` | `student` (Leader) | Submit project proposal (requires 2-4 team members) |
 | `GET` | `/teams/{id}/proposal` | Team / Guide / Admin | View team proposal |
 | `PUT` | `/teams/{id}/proposal` | `student` (Leader) | Edit proposal (resets `CHANGES_REQUESTED` to `SUBMITTED`) |
@@ -156,8 +164,11 @@ The test suite includes **50+ comprehensive unit, boundary, and security tests**
 |---|---|---|
 | **Password** | Min 8 characters | Pydantic Schema |
 | **Team Name** | 3 to 50 characters | Pydantic Schema |
+| **Course** | Specified per team (e.g., CS501 Capstone, CS502 Web3, CS503 Embedded) | Pydantic Schema + Column |
 | **Team Size** | 2 to 4 members (including leader) to submit a proposal; max 4 members | Schema & Router Helper |
-| **Membership Rule** | A student may belong to only ONE team | SQL UniqueConstraint + Pre-check |
+| **Membership Rule** | A student may belong to multiple teams across **different courses**, but only ONE team per course | Router Check (`is_student_in_course_team`) |
+| **Guide Allocation** | A faculty guide may manage multiple project teams across different courses | Router Logic + DB Foreign Key |
+| **Course Filtering** | Filter teams by course in API (`?course=...`) and in UI dropdown | Router SQL Filter + Front-End Store |
 | **Proposal Title** | 5 to 150 characters | Pydantic Schema |
 | **Proposal Abstract** | Minimum 50 characters | Pydantic Schema |
 | **Proposal Lifecycle** | `SUBMITTED` -> `APPROVED` or `CHANGES_REQUESTED`; `CHANGES_REQUESTED` -> `SUBMITTED` on edit; `APPROVED` is permanently locked | Transition State Machine Dictionary |

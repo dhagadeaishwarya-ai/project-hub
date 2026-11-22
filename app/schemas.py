@@ -46,6 +46,7 @@ class TokenData(BaseModel):
 class TeamCreate(BaseModel):
     name: str = Field(..., min_length=3, max_length=50)
     academic_year: str = Field(..., min_length=1, max_length=20)
+    course: str = Field(default="CS501 - Capstone Project", min_length=2, max_length=100)
 
 
 class TeamMemberAdd(BaseModel):
@@ -60,6 +61,7 @@ class TeamRead(BaseModel):
     id: int
     name: str
     academic_year: str
+    course: str
     leader_id: int
     guide_id: Optional[int] = None
     leader: Optional[UserRead] = None
@@ -183,5 +185,8 @@ class StudentDashboard(BaseModel):
     team_name: Optional[str] = None
     guide_name: Optional[str] = None
     proposal_status: Optional[str] = None
+    course: Optional[str] = None
     latest_completion_percent: int = 0
     last_feedback_comment: Optional[str] = None
+    teams_count: int = 0
+    enrolled_courses: List[str] = []

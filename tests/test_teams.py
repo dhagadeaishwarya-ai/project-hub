@@ -112,3 +112,81 @@ def test_student_cannot_view_another_team_403(client, student_token, make_user):
     response = client.get(f"/teams/{team_1_id}", headers=auth_header(s2_token))
     assert response.status_code == 403
     assert "Students may only view their own team" in response.json()["detail"]
+
+
+def test_student_can_join_multiple_teams_in_different_courses(client, student_token, make_user):
+    # Student 1 creates Team 1 in CS501
+    r1 = client.post(
+        "/teams",
+        json={"name": "CS501 Team", "academic_year": "2026-2027", "course": "CS501 - Capstone Project"},
+        headers=auth_header(student_token)
+    )
+    assert r1.status_code == 201
+    assert r1.json()["course"] == "CS501 - Capstone Project"
+
+    # Same Student 1 creates Team 2 in a DIFFERENT course CS502
+    r2 = client.post(
+        "/teams",
+        json={"name": "CS502 Team", "academic_year": "2026-2027", "course": "CS502 - AI & ML Lab"},
+        headers=auth_header(student_token)
+    )
+    assert r2.status_code == 201
+    assert r2.json()["course"] == "CS502 - AI & ML Lab"
+
+    # Both teams are returned for the student
+    teams_res = client.get("/teams", headers=auth_header(student_token))
+    assert teams_res.status_code == 200
+    team_names = [t["name"] for t in teams_res.json()]
+    assert "CS501 Team" in team_names
+    assert "CS502 Team" in team_names
+
+
+def test_guide_can_manage_multiple_teams_and_filter_courses(client, admin_token, student_token, faculty_user, make_user):
+    # Team 1 in CS501
+    r1 = client.post(
+        "/teams",
+        json={"name": "Guided CS501", "academic_year": "2026-2027", "course": "CS501 - Capstone Project"},
+        headers=auth_header(student_token)
+    )
+    t1_id = r1.json()["id"]
+
+    # Student 2 creates Team 2 in CS502
+    s2 = make_user("student_c2@test.com", UserRole.STUDENT)
+    s2_login = client.post("/auth/login", data={"username": s2.email, "password": "Password123!"})
+    s2_token = s2_login.json()["access_token"]
+    r2 = client.post(
+        "/teams",
+        json={"name": "Guided CS502", "academic_year": "2026-2027", "course": "CS502 - AI & ML Lab"},
+        headers=auth_header(s2_token)
+    )
+    t2_id = r2.json()["id"]
+
+    # Admin assigns same faculty guide to both teams
+    client.put(f"/teams/{t1_id}/guide", json={"faculty_id": faculty_user.id}, headers=auth_header(admin_token))
+    client.put(f"/teams/{t2_id}/guide", json={"faculty_id": faculty_user.id}, headers=auth_header(admin_token))
+
+    fac_login = client.post("/auth/login", data={"username": faculty_user.email, "password": "Password123!"})
+    fac_token = fac_login.json()["access_token"]
+
+    # Faculty views all guided teams
+    res_all = client.get("/teams", headers=auth_header(fac_token))
+    assert res_all.status_code == 200
+    assert len(res_all.json()) == 2
+
+    # Filter by course CS501
+    res_c1 = client.get("/teams", params={"course": "CS501 - Capstone Project"}, headers=auth_header(fac_token))
+    assert res_c1.status_code == 200
+    assert len(res_c1.json()) == 1
+    assert res_c1.json()[0]["name"] == "Guided CS501"
+
+    # Filter by course CS502
+    res_c2 = client.get("/teams", params={"course": "CS502 - AI & ML Lab"}, headers=auth_header(fac_token))
+    assert res_c2.status_code == 200
+    assert len(res_c2.json()) == 1
+    assert res_c2.json()[0]["name"] == "Guided CS502"
+
+    # Meta courses endpoint
+    res_courses = client.get("/teams/meta/courses")
+    assert res_courses.status_code == 200
+    assert "CS501 - Capstone Project" in res_courses.json()
+    assert "CS502 - AI & ML Lab" in res_courses.json()

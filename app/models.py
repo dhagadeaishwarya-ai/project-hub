@@ -30,12 +30,12 @@ class ProposalStatus(str, enum.Enum):
 
 
 # Association table for team membership
-# Rule: a student may belong to only ONE team -> UNIQUE constraint on user_id
+# Composite primary key (team_id, user_id). A student can join multiple teams across different courses.
 team_members = Table(
     "team_members",
     Base.metadata,
     Column("team_id", Integer, ForeignKey("teams.id", ondelete="CASCADE"), primary_key=True),
-    Column("user_id", Integer, ForeignKey("users.id", ondelete="CASCADE"), primary_key=True, unique=True)
+    Column("user_id", Integer, ForeignKey("users.id", ondelete="CASCADE"), primary_key=True)
 )
 
 
@@ -62,6 +62,7 @@ class Team(Base):
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String(100), nullable=False)
     academic_year = Column(String(20), nullable=False)
+    course = Column(String(100), nullable=False, default="CS501 - Capstone Project")
     leader_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     guide_id = Column(Integer, ForeignKey("users.id"), nullable=True)
 

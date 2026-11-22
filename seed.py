@@ -19,7 +19,8 @@ from app.security import hash_password
 
 
 def seed():
-    print("Initializing database tables...")
+    print("Recreating database tables...")
+    Base.metadata.drop_all(bind=engine)
     Base.metadata.create_all(bind=engine)
     db: Session = SessionLocal()
 
@@ -119,6 +120,7 @@ def seed():
         team1 = Team(
             name="Autonomous Rover AI",
             academic_year="2026-2027",
+            course="CS501 - Capstone Project",
             leader_id=students[0].id,
             guide_id=faculty1.id,
         )
@@ -215,6 +217,7 @@ def seed():
         team2 = Team(
             name="Decentralized MedRecords",
             academic_year="2026-2027",
+            course="CS502 - Cloud & Web3 Systems",
             leader_id=students[3].id,
             guide_id=faculty2.id,
         )
@@ -237,6 +240,34 @@ def seed():
         db.add(prop2)
         db.commit()
 
+        print("Creating Team 3 (Edge AI Diagnostics - Multi-course demonstration)...")
+        # Student 1 (Aarav) also leads Team 3 for course CS503 under Dr. Priya Patel!
+        team3 = Team(
+            name="Edge AI Diagnostics",
+            academic_year="2026-2027",
+            course="CS503 - Embedded Systems Lab",
+            leader_id=students[0].id,
+            guide_id=faculty2.id,
+        )
+        team3.members.extend([students[0], students[4], students[5]])
+        db.add(team3)
+        db.commit()
+        db.refresh(team3)
+
+        print("Creating Submitted Proposal for Team 3...")
+        prop3 = Proposal(
+            team_id=team3.id,
+            title="Edge Anomaly Detection with Quantized Neural Models",
+            abstract="This laboratory project explores deployable sub-watt machine learning models for early mechanical vibration anomaly detection on microcontroller-class edge nodes.",
+            problem_statement="Industrial vibration monitors require expensive cloud backhauls and encounter prohibitive network latency during catastrophic motor failures.",
+            domain="Embedded Systems & TinyML",
+            tech_stack="C++, FreeRTOS, TensorFlow Lite for Microcontrollers, STM32",
+            status=ProposalStatus.SUBMITTED,
+            faculty_comment=None,
+        )
+        db.add(prop3)
+        db.commit()
+
         print("\n=======================================================")
         print("DATABASE SEEDING COMPLETED SUCCESSFULLY!")
         print("=======================================================")
@@ -246,9 +277,10 @@ def seed():
         print("      * Dr. Ramesh Sharma: dr.sharma@projecthub.edu (Password: FacultyPass123!)")
         print("      * Dr. Priya Patel: dr.patel@projecthub.edu (Password: FacultyPass123!)")
         print("  - 6 Students (student1@projecthub.edu .. student6@projecthub.edu, Password: StudentPass123!)")
-        print("  - 2 Teams:")
-        print("      * Team 1: 'Autonomous Rover AI' (APPROVED, 3 weeks progress, 3 feedbacks)")
-        print("      * Team 2: 'Decentralized MedRecords' (CHANGES_REQUESTED)")
+        print("  - 3 Multi-Course Teams:")
+        print("      * Team 1: 'Autonomous Rover AI' [CS501 - Capstone Project] (Guide: Dr. Sharma, Leader: Student 1)")
+        print("      * Team 2: 'Decentralized MedRecords' [CS502 - Cloud & Web3 Systems] (Guide: Dr. Patel, Leader: Student 4)")
+        print("      * Team 3: 'Edge AI Diagnostics' [CS503 - Embedded Systems Lab] (Guide: Dr. Patel, Leader: Student 1)")
         print("=======================================================\n")
 
     except Exception as exc:

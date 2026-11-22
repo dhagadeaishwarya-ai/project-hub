@@ -7,6 +7,8 @@ const App = {
     currentUser: null,
     currentTab: 'dashboard',
     activeTeamId: null,
+    selectedCourse: '',
+    availableCourses: [],
     teams: [],
     dashboard: null,
     activeTeam: null,
@@ -262,11 +264,26 @@ const App = {
             <div class="card" style="margin-bottom:1.5rem;">
               <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:1.25rem; flex-wrap:wrap; gap:1rem;">
                 <div>
-                  <div style="font-size:0.85rem; color:var(--text-muted); text-transform:uppercase;">My Team</div>
+                  <div style="display:flex; align-items:center; gap:0.5rem; margin-bottom:0.25rem;">
+                    <span style="font-size:0.85rem; color:var(--text-muted); text-transform:uppercase;">My Active Team</span>
+                    ${data.course ? `<span class="badge" style="background:rgba(99, 102, 241, 0.15); color:#a5b4fc; text-transform:none;">📚 ${data.course}</span>` : ''}
+                  </div>
                   <h3 style="font-size:1.5rem; font-weight:700;">${data.team_name}</h3>
                 </div>
                 <div>${statusBadge}</div>
               </div>
+
+              ${data.enrolled_courses && data.enrolled_courses.length > 0 ? `
+                <div style="background:rgba(15, 23, 42, 0.6); padding:0.75rem 1rem; border-radius:var(--radius-md); border:1px solid var(--border-color); margin-bottom:1.25rem; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:0.5rem;">
+                  <div style="display:flex; align-items:center; gap:0.5rem; flex-wrap:wrap;">
+                    <span style="font-size:0.8rem; color:var(--text-muted); font-weight:600;">Enrolled Courses (${data.enrolled_courses.length}):</span>
+                    ${data.enrolled_courses.map(c => `
+                      <span class="badge" style="background:rgba(99, 102, 241, 0.15); color:#a5b4fc; cursor:pointer;" onclick="App.state.selectedCourse='${c}'; App.switchTab('teams');" title="Click to view teams in this course">📚 ${c}</span>
+                    `).join('')}
+                  </div>
+                  <button class="btn btn-secondary btn-sm" onclick="App.openCreateTeamModal()">➕ Create Another Team (New Course)</button>
+                </div>
+              ` : ''}
 
               <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:1rem; margin-bottom:1.5rem;">
                 <div style="background:var(--bg-input); padding:1rem; border-radius:var(--radius-md);">
@@ -317,7 +334,9 @@ const App = {
   async renderTeamsView() {
     const area = document.getElementById('tab-content-area');
     try {
-      const teams = await API.getTeams();
+      const courses = await API.getCourses().catch(() => []);
+      this.state.availableCourses = courses;
+      const teams = await API.getTeams(this.state.selectedCourse);
       this.state.teams = teams;
       const user = this.state.currentUser;
 
@@ -325,10 +344,20 @@ const App = {
         <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:1.5rem; flex-wrap:wrap; gap:1rem;">
           <div>
             <h2 style="font-size:1.75rem; font-weight:700;">Project Teams</h2>
-            <p style="color:var(--text-muted);">${user.role === 'admin' ? 'All College Teams' : user.role === 'faculty' ? 'Your Guided Project Teams' : 'Your Team Management'}</p>
+            <p style="color:var(--text-muted);">${user.role === 'admin' ? 'All College Teams Across All Courses' : user.role === 'faculty' ? 'Your Guided Project Teams Across Courses' : 'Your Enrolled Project Teams'}</p>
           </div>
-          <div>
-            ${user.role === 'student' && teams.length === 0 ? `
+          <div style="display:flex; align-items:center; gap:0.75rem; flex-wrap:wrap;">
+            <!-- Course Filter Option -->
+            <div style="display:flex; align-items:center; gap:0.4rem; background:var(--bg-input); padding:0.35rem 0.65rem; border-radius:var(--radius-md); border:1px solid var(--border-color);">
+              <span style="font-size:0.8rem; color:var(--text-muted); font-weight:600;">📚 Filter Course:</span>
+              <select class="form-control" style="width:auto; padding:0.2rem 0.5rem; font-size:0.8rem;" onchange="App.handleCourseFilter(this.value)">
+                <option value="">All Courses (${courses.length})</option>
+                ${courses.map(c => `<option value="${c}" ${c === App.state.selectedCourse ? 'selected' : ''}>${c}</option>`).join('')}
+              </select>
+              ${this.state.selectedCourse ? `<button class="btn btn-secondary btn-sm" style="padding:0.15rem 0.4rem; font-size:0.75rem;" onclick="App.handleCourseFilter('')" title="Clear course filter">✕</button>` : ''}
+            </div>
+
+            ${user.role === 'student' ? `
               <button class="btn btn-primary" onclick="App.openCreateTeamModal()">➕ Create Team</button>
             ` : ''}
           </div>
@@ -340,9 +369,11 @@ const App = {
             <div style="font-size:3rem; margin-bottom:1rem;">📭</div>
             <h3 style="font-size:1.25rem; font-weight:600; margin-bottom:0.5rem;">No teams found</h3>
             <p style="color:var(--text-muted); max-width:400px; margin:0 auto 1.5rem auto;">
-              ${user.role === 'student' ? 'You have not joined or created a team yet.' : 'There are currently no teams in your scope.'}
+              ${this.state.selectedCourse ? `No teams found enrolled in course "${this.state.selectedCourse}".` : user.role === 'student' ? 'You have not joined or created a team yet.' : 'There are currently no teams in your scope.'}
             </p>
-            ${user.role === 'student' ? `
+            ${this.state.selectedCourse ? `
+              <button class="btn btn-secondary btn-sm" onclick="App.handleCourseFilter('')">Show All Courses</button>
+            ` : user.role === 'student' ? `
               <button class="btn btn-primary" onclick="App.openCreateTeamModal()">Create New Team</button>
             ` : ''}
           </div>
@@ -356,10 +387,18 @@ const App = {
           html += `
             <div class="card" style="display:flex; flex-direction:column; justify-content:space-between;">
               <div>
-                <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:0.75rem;">
+                <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:0.6rem; flex-wrap:wrap; gap:0.35rem;">
                   <span class="badge" style="background:#1e293b; color:#94a3b8;">${t.academic_year}</span>
                   ${t.guide ? `<span class="badge badge-faculty">Guide: ${t.guide.name}</span>` : `<span class="badge" style="background:rgba(239, 68, 68, 0.15); color:#f87171;">No Guide</span>`}
                 </div>
+
+                <!-- Course badge on each team card -->
+                <div style="margin-bottom:0.65rem;">
+                  <span class="badge" style="background:rgba(99, 102, 241, 0.15); color:#a5b4fc; border:1px solid rgba(99, 102, 241, 0.35); text-transform:none; font-size:0.78rem; font-weight:600;">
+                    📚 ${t.course}
+                  </span>
+                </div>
+
                 <h3 style="font-size:1.2rem; font-weight:700; margin-bottom:0.5rem;">${t.name}</h3>
                 <div style="font-size:0.85rem; color:var(--text-muted); margin-bottom:0.5rem;">
                   <strong>Leader:</strong> ${t.leader ? t.leader.name : 'Unknown'}
@@ -386,6 +425,11 @@ const App = {
     } catch (err) {
       area.innerHTML = `<div class="card" style="color:var(--danger); text-align:center; padding:2rem;">Error loading teams: ${err.message}</div>`;
     }
+  },
+
+  handleCourseFilter(course) {
+    this.state.selectedCourse = course;
+    this.renderTeamsView();
   },
 
   // --------------------------------------------------------------------------
@@ -429,7 +473,10 @@ const App = {
           <div class="card" style="margin-bottom:1.5rem;">
             <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:1rem;">
               <div>
-                <span class="badge" style="background:#1e293b; color:#94a3b8; margin-bottom:0.5rem;">Academic Year: ${team.academic_year}</span>
+                <div style="display:flex; gap:0.5rem; align-items:center; margin-bottom:0.5rem; flex-wrap:wrap;">
+                  <span class="badge" style="background:#1e293b; color:#94a3b8;">Academic Year: ${team.academic_year}</span>
+                  <span class="badge" style="background:rgba(99, 102, 241, 0.15); color:#a5b4fc; border:1px solid rgba(99, 102, 241, 0.35); text-transform:none; font-size:0.8rem; font-weight:600;">📚 ${team.course}</span>
+                </div>
                 <h2 style="font-size:1.85rem; font-weight:700;">${team.name}</h2>
                 <div style="font-size:0.9rem; color:var(--text-muted); margin-top:0.25rem;">
                   Leader: <strong>${team.leader ? team.leader.name : 'Unknown'}</strong> (${team.leader ? team.leader.email : ''})
@@ -685,10 +732,11 @@ const App = {
     e.preventDefault();
     const name = document.getElementById('team-name-input').value.trim();
     const year = document.getElementById('team-year-input').value.trim();
+    const course = document.getElementById('team-course-input')?.value.trim() || 'CS501 - Capstone Project';
     try {
-      await API.createTeam(name, year);
+      await API.createTeam(name, year, course);
       this.closeModal('modal-create-team');
-      this.showToast(`Team '${name}' created successfully!`, 'success');
+      this.showToast(`Team '${name}' for course '${course}' created successfully!`, 'success');
       this.renderTeamsView();
     } catch (err) {
       this.showToast(err.message, 'error');
